@@ -138,6 +138,55 @@
             height: calc(100vh - 240px);
             min-height: 500px;
             transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .iframe-container.resizing {
+            transition: none;
+        }
+
+        .resize-handle {
+            position: absolute;
+            background: transparent;
+            z-index: 10;
+        }
+
+        .resize-handle-right {
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 100%;
+            cursor: ew-resize;
+        }
+
+        .resize-handle-right:hover {
+            background: rgba(0, 102, 204, 0.2);
+        }
+
+        .resize-handle-bottom {
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            cursor: ns-resize;
+        }
+
+        .resize-handle-bottom:hover {
+            background: rgba(0, 102, 204, 0.2);
+        }
+
+        .resize-handle-corner {
+            bottom: 0;
+            right: 0;
+            width: 16px;
+            height: 16px;
+            cursor: nwse-resize;
+            background: rgba(0, 102, 204, 0.5);
+            border-radius: 0 0 8px 0;
+        }
+
+        .resize-handle-corner:hover {
+            background: rgba(0, 102, 204, 0.7);
         }
 
         .size-controls {
@@ -264,6 +313,9 @@
         </div>
         <div class="iframe-container" id="iframeContainer">
             <iframe id="viewer" sandbox="allow-same-origin allow-scripts allow-popups allow-forms" allowfullscreen></iframe>
+            <div class="resize-handle resize-handle-right" id="resizeRight"></div>
+            <div class="resize-handle resize-handle-bottom" id="resizeBottom"></div>
+            <div class="resize-handle resize-handle-corner" id="resizeCorner"></div>
         </div>
     </div>
 
@@ -313,6 +365,77 @@
             container.style.height = '';
             // Reset to original CSS minHeight of 500px
             container.style.minHeight = '500px';
+        }
+
+        // Drag-to-resize functionality
+        function initResizeHandles() {
+            const container = document.getElementById('iframeContainer');
+            const resizeRight = document.getElementById('resizeRight');
+            const resizeBottom = document.getElementById('resizeBottom');
+            const resizeCorner = document.getElementById('resizeCorner');
+            const widthInput = document.getElementById('widthInput');
+            const widthUnit = document.getElementById('widthUnit');
+            const heightInput = document.getElementById('heightInput');
+            const heightUnit = document.getElementById('heightUnit');
+
+            let isResizing = false;
+            let resizeType = null;
+            let startX = 0;
+            let startY = 0;
+            let startWidth = 0;
+            let startHeight = 0;
+
+            function startResize(e, type) {
+                isResizing = true;
+                resizeType = type;
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                const rect = container.getBoundingClientRect();
+                startWidth = rect.width;
+                startHeight = rect.height;
+                
+                container.classList.add('resizing');
+                e.preventDefault();
+            }
+
+            function resize(e) {
+                if (!isResizing) return;
+
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+
+                if (resizeType === 'right' || resizeType === 'corner') {
+                    const newWidth = Math.max(100, startWidth + deltaX);
+                    container.style.width = newWidth + 'px';
+                    widthInput.value = Math.round(newWidth);
+                    widthUnit.value = 'px';
+                }
+
+                if (resizeType === 'bottom' || resizeType === 'corner') {
+                    const newHeight = Math.max(100, startHeight + deltaY);
+                    container.style.height = newHeight + 'px';
+                    container.style.minHeight = newHeight + 'px';
+                    heightInput.value = Math.round(newHeight);
+                    heightUnit.value = 'px';
+                }
+            }
+
+            function stopResize() {
+                if (isResizing) {
+                    isResizing = false;
+                    resizeType = null;
+                    container.classList.remove('resizing');
+                }
+            }
+
+            // Attach event listeners
+            resizeRight.addEventListener('mousedown', (e) => startResize(e, 'right'));
+            resizeBottom.addEventListener('mousedown', (e) => startResize(e, 'bottom'));
+            resizeCorner.addEventListener('mousedown', (e) => startResize(e, 'corner'));
+
+            document.addEventListener('mousemove', resize);
+            document.addEventListener('mouseup', stopResize);
         }
 
         // Parse URL parameters
@@ -423,6 +546,9 @@
         document.getElementById('widthUnit').addEventListener('change', updateIframeSize);
         document.getElementById('heightInput').addEventListener('input', updateIframeSize);
         document.getElementById('heightUnit').addEventListener('change', updateIframeSize);
+
+        // Initialize resize handles
+        initResizeHandles();
 
         // Run initialization
         init();
