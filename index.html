@@ -287,9 +287,12 @@
 
             container.style.width = width;
             container.style.height = height;
-            // Only override minHeight when using explicit height values
+            // Set minHeight to match height for absolute units (px, vh) to prevent collapsing
+            // For percentage heights, keep the original CSS minHeight
             if (heightUnit.value === 'px' || heightUnit.value === 'vh') {
                 container.style.minHeight = height;
+            } else {
+                container.style.minHeight = '500px';
             }
         }
 
