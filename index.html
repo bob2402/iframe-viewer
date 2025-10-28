@@ -287,7 +287,10 @@
 
             container.style.width = width;
             container.style.height = height;
-            container.style.minHeight = 'auto';
+            // Only override minHeight when using explicit height values
+            if (heightUnit.value === 'px' || heightUnit.value === 'vh') {
+                container.style.minHeight = height;
+            }
         }
 
         // Reset iframe size to defaults
@@ -305,7 +308,8 @@
 
             container.style.width = '';
             container.style.height = '';
-            container.style.minHeight = '';
+            // Reset to original CSS minHeight of 500px
+            container.style.minHeight = '500px';
         }
 
         // Parse URL parameters
