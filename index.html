@@ -65,6 +65,20 @@
             background: #0052a3;
         }
 
+        .error-message {
+            color: #d32f2f;
+            background: #ffebee;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
         .info {
             color: #666;
             font-size: 14px;
@@ -118,6 +132,7 @@
                 <input type="text" id="urlInput" placeholder="Enter URL (e.g., https://example.com)">
                 <button onclick="updateIframe()">Load URL</button>
             </div>
+            <div id="errorMessage" class="error-message"></div>
             <div class="info">
                 <p><strong>How to use:</strong></p>
                 <p>1. Enter a URL in the input above and click "Load URL"</p>
@@ -166,8 +181,22 @@
                 return url.toString();
             } catch (e) {
                 console.error('Invalid URL:', e);
+                showError('Invalid URL format. Please enter a valid URL (e.g., https://example.com)');
                 return '';
             }
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+        }
+
+        // Hide error message
+        function hideError() {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.classList.remove('show');
         }
 
         // Update the iframe with the constructed URL
@@ -177,6 +206,7 @@
             const displayUrl = document.getElementById('displayUrl');
             
             if (targetUrl) {
+                hideError();
                 iframe.src = targetUrl;
                 displayUrl.textContent = targetUrl;
                 currentUrlDiv.style.display = 'block';
@@ -191,9 +221,14 @@
             const urlInput = document.getElementById('urlInput');
             const baseUrl = urlInput.value.trim();
             
-            if (baseUrl) {
-                const params = getUrlParams();
-                const targetUrl = buildTargetUrl(baseUrl, params);
+            if (!baseUrl) {
+                showError('Please enter a URL');
+                return;
+            }
+            
+            const params = getUrlParams();
+            const targetUrl = buildTargetUrl(baseUrl, params);
+            if (targetUrl) {
                 loadUrl(targetUrl);
             }
         }
